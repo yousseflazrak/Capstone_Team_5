@@ -65,9 +65,9 @@ class Agent_Q():
         state = torch.from_numpy(state).float().unsqueeze(0).to(device)
         self.qnetwork_local.eval()
         with torch.no_grad():
-            action= self.qnetwork_local(state)
+            action_values= self.qnetwork_local(state)
         self.qnetwork_local.train()
-       if random.random() > eps:
+        if random.random() > eps:
             return np.argmax(action_values.cpu().data.numpy())
         else:
             return random.choice(np.arange(self.action_size))
@@ -89,16 +89,16 @@ class Agent_Q():
         """
         states, actions, rewards, next_states, dones = experiences
 
-        criterion = torch.nn.MSELoss()
-        self.qnetwork_local.train()
-        self.qnetwork_target.eval()
-        predicted_targets = self.qnetwork_local(states).gather(1,actions)
-        with torch.no_grad():
-            labels_next = self.qnetwork_target(next_states).detach().max(1)[0].unsqueeze(1)
+        Q_targets_next = self.qnetwork_target(next_states).detach().max(1)[0].unsqueeze(1)
+        # Compute Q targets for current states 
+        Q_targets = rewards + (gamma * Q_targets_next * (1 - dones))
 
-        labels = rewards + (gamma * labels_next * (1 - dones))
+        # Get expected Q values from local model
+        Q_expected = self.qnetwork_local(states).gather(1,actions)
 
-        loss = criterion(predicted_targets, labels).to(device)
+        # Compute loss
+        loss = F.mse_loss(Q_expected, Q_targets)
+        # Minimize the loss
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()

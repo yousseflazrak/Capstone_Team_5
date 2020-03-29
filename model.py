@@ -78,8 +78,8 @@ class Critic(nn.Module):
 class QNetwork(nn.Module):
     """ Actor (Policy) Model."""
 
-    def __init__(self, state_size, action_size, seed, fc1_unit=24,
-                 fc2_unit=48):
+    def __init__(self, state_size, action_size, seed, fc1_unit=64,
+                 fc2_unit=64):
         """
         Initialize parameters and build model.
         Params
